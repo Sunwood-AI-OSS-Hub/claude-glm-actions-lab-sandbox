@@ -1,0 +1,56 @@
+name: CLAUDE_CODE_GLM_DEV
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review_comment:
+    types: [created]
+
+# 同じIssue/PRでは同時に走らないようにする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ★ここで「この実行が使うブランチ名」を決め打ちする
+      - name: Compute branch name
+        id: branch
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+            echo "name=claude-glm-dev-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=claude-glm-dev-issue-${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          trigger_phrase: "@claude"
+
+          # ★ブランチ生成を固定（slashよりdash推奨）
+          branch_prefix: ""
+          branch_name_template: ${{ steps.branch.outputs.name }}
+
+        env:
+          # GLMに向ける設定
+          ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.CLAUDE_GLM_DEV_API_KEY }}
+          API_TIMEOUT_MS: "3000000"
