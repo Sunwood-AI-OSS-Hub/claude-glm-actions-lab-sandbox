@@ -29,6 +29,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       # ★ここで「この実行が使うブランチ名」を決め打ちする
       - name: Compute branch name
@@ -48,9 +50,6 @@ jobs:
           # ★ブランチ生成を固定（slashよりdash推奨）
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
-
-          # ベースブランチを指定
-          base_branch: "main"
 
         env:
           # GLMに向ける設定
