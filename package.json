@@ -1,0 +1,16 @@
+{
+  "name": "omikuji-app",
+  "version": "1.0.0",
+  "description": "Simple fortune-telling (omikuji) application",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "fortune": "npm run build && node dist/index.js"
+  },
+  "keywords": ["omikuji", "fortune", "japanese"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
