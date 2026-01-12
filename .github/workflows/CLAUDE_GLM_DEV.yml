@@ -49,6 +49,9 @@ jobs:
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
 
+          # ベースブランチを指定
+          base_branch: "main"
+
         env:
           # GLMに向ける設定
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
