@@ -82,8 +82,14 @@ jobs:
           # Claudeの最新のコメントを取得（配列の最後の要素を取得）
           CLAUDE_COMMENT=$(gh issue view "$ISSUE_NUMBER" --json comments --jq '[.comments[] | select(.author.login == "claude[bot]") | .body] | last')
 
-          # 「Create PR ➔」リンクのURLを抽出（perlでUnicode対応）
-          CREATE_PR_URL=$(echo "$CLAUDE_COMMENT" | perl -0777 -ne 'print $1 if /\[Create PR[^\]]+\]\((https[^)]+)\)/' || echo "")
+          # 「Create PR ➔」リンクのURLを抽出（Pythonで正規表現）
+          CREATE_PR_URL=$(python3 -c "
+import re, sys
+comment = '''$CLAUDE_COMMENT'''
+match = re.search(r'\[Create PR[^\]]*\]\((https[^)]+)\)', comment)
+if match:
+    print(match.group(1))
+" || echo "")
 
           if [ -n "$CREATE_PR_URL" ]; then
             # URLからtitleとbodyパラメータを抽出
