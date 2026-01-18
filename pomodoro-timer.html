@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポモドーロテクニクタイマー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 350px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .mode {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 30px;
+            font-weight: normal;
+        }
+
+        .timer-display {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-display.work {
+            color: #667eea;
+        }
+
+        .timer-display.break {
+            color: #51cf66;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-start {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(81, 207, 102, 0.4);
+        }
+
+        .btn-stop {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #fa5252;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-reset {
+            background: #868e96;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #748595;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(134, 142, 150, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 1s linear;
+        }
+
+        .progress-fill.break {
+            background: linear-gradient(90deg, #51cf66 0%, #37b24d 100%);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                min-width: 280px;
+            }
+
+            .timer-display {
+                font-size: 3.5rem;
+            }
+
+            button {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍅 ポモドーロタイマー</h1>
+        <p class="mode" id="mode-text">作業モード</p>
+
+        <div class="timer-display work" id="timer">25:00</div>
+
+        <div class="buttons">
+            <button class="btn-start" id="start-btn">スタート</button>
+            <button class="btn-stop" id="stop-btn" disabled>ストップ</button>
+            <button class="btn-reset" id="reset-btn">リセット</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        const WORK_TIME = 25 * 60; // 25 minutes
+        const BREAK_TIME = 5 * 60; // 5 minutes
+
+        let timeLeft = WORK_TIME;
+        let totalTime = WORK_TIME;
+        let isRunning = false;
+        let isWorkMode = true;
+        let timerInterval = null;
+
+        const timerDisplay = document.getElementById('timer');
+        const modeText = document.getElementById('mode-text');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const progressFill = document.getElementById('progress');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(timeLeft);
+
+            // Update progress bar
+            const progress = ((totalTime - timeLeft) / totalTime) * 100;
+            progressFill.style.width = `${progress}%`;
+        }
+
+        function setMode(isWork) {
+            isWorkMode = isWork;
+            if (isWork) {
+                timeLeft = WORK_TIME;
+                totalTime = WORK_TIME;
+                modeText.textContent = '作業モード';
+                timerDisplay.classList.remove('break');
+                timerDisplay.classList.add('work');
+                progressFill.classList.remove('break');
+            } else {
+                timeLeft = BREAK_TIME;
+                totalTime = BREAK_TIME;
+                modeText.textContent = '休憩モード';
+                timerDisplay.classList.remove('work');
+                timerDisplay.classList.add('break');
+                progressFill.classList.add('break');
+            }
+            updateDisplay();
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        // Timer completed
+                        clearInterval(timerInterval);
+                        isRunning = false;
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+
+                        // Play notification sound
+                        playNotification();
+
+                        // Switch mode
+                        setMode(!isWorkMode);
+
+                        // Auto-start next session (optional - remove if not desired)
+                        // startTimer();
+                    }
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            setMode(isWorkMode);
+        }
+
+        function playNotification() {
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+
+            oscillator.start();
+
+            setTimeout(() => {
+                oscillator.stop();
+            }, 200);
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        stopBtn.addEventListener('click', stopTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
