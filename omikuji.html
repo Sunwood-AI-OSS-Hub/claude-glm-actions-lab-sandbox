@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おみくじ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .omikuji-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .result.daikichi { color: #ff4757; }
+        .result.chukichi { color: #ff6b81; }
+        .result.shokichi { color: #ffa502; }
+        .result.suekichi { color: #2ed573; }
+        .result.kichi { color: #1e90ff; }
+        .result.kyo { color: #57606f; }
+
+        .description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.3s;
+        }
+
+        .description.show {
+            opacity: 1;
+        }
+
+        .draw-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .draw-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .draw-btn:active {
+            transform: translateY(0);
+        }
+
+        .draw-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .history {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .history h3 {
+            color: #333;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            list-style: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 おみくじ</h1>
+
+        <div class="omikuji-box" id="omikujiBox">
+            <div class="result" id="result"></div>
+            <div class="description" id="description"></div>
+        </div>
+
+        <button class="draw-btn" id="drawBtn">おみくじを引く</button>
+
+        <div class="history">
+            <h3>📜 履歴</h3>
+            <ul class="history-list" id="historyList"></ul>
+        </div>
+    </div>
+
+    <script>
+        const omikujiData = [
+            { rank: 'daikichi', label: '大吉', probability: 0.05, description: '素晴らしい運勢です！何をしてもうまくいくでしょう。' },
+            { rank: 'chukichi', label: '中吉', probability: 0.15, description: '良い運勢です。前向きに進めば幸運が訪れます。' },
+            { rank: 'shokichi', label: '小吉', probability: 0.20, description: '小さな幸せがたくさんあります。日常を楽しみましょう。' },
+            { rank: 'suekichi', label: '末吉', probability: 0.20, description: '運気は上向きです。忍耐強く待ちましょう。' },
+            { rank: 'kichi', label: '吉', probability: 0.25, description: '穏やかな幸せがあります。平和な日々を過ごせそうです。' },
+            { rank: 'kyo', label: '凶', probability: 0.15, description: '少し注意が必要です。でも恐れることはありません。' }
+        ];
+
+        let history = [];
+
+        function drawOmikuji() {
+            const random = Math.random();
+            let cumulative = 0;
+
+            for (const item of omikujiData) {
+                cumulative += item.probability;
+                if (random < cumulative) {
+                    return item;
+                }
+            }
+            return omikujiData[omikujiData.length - 1];
+        }
+
+        function updateDisplay(result) {
+            const resultEl = document.getElementById('result');
+            const descriptionEl = document.getElementById('description');
+
+            // Reset
+            resultEl.classList.remove('show', 'daikichi', 'chukichi', 'shokichi', 'suekichi', 'kichi', 'kyo');
+            descriptionEl.classList.remove('show');
+
+            // Add new result
+            setTimeout(() => {
+                resultEl.textContent = result.label;
+                resultEl.classList.add('show', result.rank);
+
+                setTimeout(() => {
+                    descriptionEl.textContent = result.description;
+                    descriptionEl.classList.add('show');
+                }, 300);
+            }, 100);
+        }
+
+        function addToHistory(result) {
+            const now = new Date();
+            const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            history.unshift({ ...result, time: timeStr });
+
+            if (history.length > 10) {
+                history.pop();
+            }
+
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.textContent = `${item.time} - ${item.label}`;
+                historyList.appendChild(li);
+            });
+        }
+
+        document.getElementById('drawBtn').addEventListener('click', function() {
+            const btn = this;
+            const omikujiBox = document.getElementById('omikujiBox');
+
+            // Disable button and add shake animation
+            btn.disabled = true;
+            omikujiBox.classList.add('shaking');
+
+            // Reset display
+            const resultEl = document.getElementById('result');
+            const descriptionEl = document.getElementById('description');
+            resultEl.classList.remove('show');
+            descriptionEl.classList.remove('show');
+
+            // Draw and show result after animation
+            setTimeout(() => {
+                omikujiBox.classList.remove('shaking');
+                const result = drawOmikuji();
+                updateDisplay(result);
+                addToHistory(result);
+                btn.disabled = false;
+            }, 500);
+        });
+    </script>
+</body>
+</html>
