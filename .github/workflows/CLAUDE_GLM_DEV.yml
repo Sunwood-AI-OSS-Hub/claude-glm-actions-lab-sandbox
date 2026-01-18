@@ -74,7 +74,8 @@ jobs:
           ISSUE_TITLE="${{ github.event.issue.title }}"
 
           # 既にPRが存在するか確認
-          if gh pr list --head "$BRANCH_NAME" --json number | jq '. | length > 0'; then
+          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --json number --jq '. | length > 0')
+          if [ "$PR_EXISTS" = "true" ]; then
             echo "PR already exists for branch $BRANCH_NAME, skipping..."
             exit 0
           fi
@@ -87,4 +88,4 @@ jobs:
             --body "Closes #$ISSUE_NUMBER
 
           Generated with [Claude Code](https://claude.ai/code)" \
-            || echo "PR creation failed or already exists"
+            || echo "PR creation failed or branch has no changes"
