@@ -33,12 +33,14 @@ def main():
         print(f"PR already exists for branch {branch_name}, skipping...")
         return
 
-    # Get commit message from branch
-    commit_body = run_command([
+    # Get commit message from branch (get all commits, separated by null char)
+    commits = run_command([
         "git", "log", f"origin/main..{branch_name}",
-        "--pretty=format:%B", "--reverse"
-    ]).split("\n")[0] if branch_name else ""
-    print(f"[DEBUG] Commit body: {commit_body}", file=sys.stderr)
+        "--pretty=format:%B%x00", "--reverse"
+    ])
+    # Get first commit (split by null character)
+    commit_body = commits.split("\x00")[0].strip() if commits else ""
+    print(f"[DEBUG] Commit body:\n{commit_body}", file=sys.stderr)
 
     # Get Claude's latest comment
     issue_data = run_command([
@@ -102,6 +104,7 @@ Closes #{issue_number}
 Generated with [Claude Code](https://claude.ai/code)"""
 
     print(f"[DEBUG] PR title: {pr_title}", file=sys.stderr)
+    print(f"[DEBUG] PR body:\n{final_body}", file=sys.stderr)
     print(f"[DEBUG] PR body length: {len(final_body)}", file=sys.stderr)
 
     # Create PR
