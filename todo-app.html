@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todoリストアプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .task-counter {
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .input-section {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        #taskInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #addButton {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #addButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #addButton:active {
+            transform: translateY(0);
+        }
+
+        .todo-list {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .todo-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed .task-text {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            margin-right: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .checkbox:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .todo-item.completed .checkbox {
+            background: #667eea;
+        }
+
+        .checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            display: none;
+        }
+
+        .todo-item.completed .checkbox::after {
+            display: block;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 15px;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .delete-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .delete-button:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-button.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Todoリスト</h1>
+            <div class="task-counter">
+                <span id="activeCount">0</span> 個のタスクが残っています
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-wrapper">
+                <input type="text" id="taskInput" placeholder="新しいタスクを入力...">
+                <button id="addButton">追加</button>
+            </div>
+        </div>
+
+        <div class="todo-list" id="todoList">
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p>タスクがありません</p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-button active" data-filter="all">すべて</button>
+            <button class="filter-button" data-filter="active">未完了</button>
+            <button class="filter-button" data-filter="completed">完了済</button>
+        </div>
+    </div>
+
+    <script>
+        // Todoアプリのメインクラス
+        class TodoApp {
+            constructor() {
+                this.todos = this.loadFromStorage();
+                this.currentFilter = 'all';
+                this.init();
+            }
+
+            init() {
+                this.taskInput = document.getElementById('taskInput');
+                this.addButton = document.getElementById('addButton');
+                this.todoList = document.getElementById('todoList');
+                this.activeCount = document.getElementById('activeCount');
+                this.filterButtons = document.querySelectorAll('.filter-button');
+
+                this.attachEventListeners();
+                this.render();
+            }
+
+            attachEventListeners() {
+                this.addButton.addEventListener('click', () => this.addTask());
+                this.taskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+
+                this.filterButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        this.currentFilter = button.dataset.filter;
+                        this.updateFilterButtons();
+                        this.render();
+                    });
+                });
+            }
+
+            updateFilterButtons() {
+                this.filterButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.filter === this.currentFilter);
+                });
+            }
+
+            addTask() {
+                const text = this.taskInput.value.trim();
+                if (!text) return;
+
+                this.todos.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                });
+
+                this.taskInput.value = '';
+                this.saveToStorage();
+                this.render();
+            }
+
+            toggleTask(id) {
+                this.todos = this.todos.map(todo =>
+                    todo.id === id ? { ...todo, completed: !todo.completed } : todo
+                );
+                this.saveToStorage();
+                this.render();
+            }
+
+            deleteTask(id) {
+                this.todos = this.todos.filter(todo => todo.id !== id);
+                this.saveToStorage();
+                this.render();
+            }
+
+            getFilteredTodos() {
+                switch (this.currentFilter) {
+                    case 'active':
+                        return this.todos.filter(todo => !todo.completed);
+                    case 'completed':
+                        return this.todos.filter(todo => todo.completed);
+                    default:
+                        return this.todos;
+                }
+            }
+
+            render() {
+                const filteredTodos = this.getFilteredTodos();
+                const activeTodos = this.todos.filter(todo => !todo.completed);
+
+                this.activeCount.textContent = activeTodos.length;
+
+                if (filteredTodos.length === 0) {
+                    this.showEmptyState();
+                } else {
+                    this.renderTodos(filteredTodos);
+                }
+            }
+
+            showEmptyState() {
+                const emptyMessages = {
+                    all: 'タスクがありません',
+                    active: '未完了のタスクはありません',
+                    completed: '完了したタスクはありません'
+                };
+
+                this.todoList.innerHTML = `
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <p>${emptyMessages[this.currentFilter]}</p>
+                    </div>
+                `;
+            }
+
+            renderTodos(todos) {
+                this.todoList.innerHTML = todos.map(todo => `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                        <div class="checkbox" onclick="app.toggleTask(${todo.id})"></div>
+                        <span class="task-text">${this.escapeHtml(todo.text)}</span>
+                        <button class="delete-button" onclick="app.deleteTask(${todo.id})">削除</button>
+                    </div>
+                `).join('');
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            saveToStorage() {
+                localStorage.setItem('todos', JSON.stringify(this.todos));
+            }
+
+            loadFromStorage() {
+                const stored = localStorage.getItem('todos');
+                return stored ? JSON.parse(stored) : [];
+            }
+        }
+
+        // アプリケーションを初期化
+        const app = new TodoApp();
+    </script>
+</body>
+</html>
