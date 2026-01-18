@@ -63,6 +63,11 @@
             border-color: #667eea;
         }
 
+        .input-group input:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
         .input-group label {
             margin-top: 5px;
             font-size: 12px;
@@ -108,7 +113,7 @@
             color: white;
         }
 
-        .btn-start:hover {
+        .btn-start:hover:not(:disabled) {
             background: #27ae60;
             transform: translateY(-2px);
         }
@@ -118,7 +123,7 @@
             color: white;
         }
 
-        .btn-pause:hover {
+        .btn-pause:hover:not(:disabled) {
             background: #e67e22;
             transform: translateY(-2px);
         }
@@ -128,7 +133,7 @@
             color: white;
         }
 
-        .btn-reset:hover {
+        .btn-reset:hover:not(:disabled) {
             background: #c0392b;
             transform: translateY(-2px);
         }
@@ -138,153 +143,256 @@
             cursor: not-allowed;
             transform: none;
         }
-
-        .btn-start:disabled:hover,
-        .btn-pause:disabled:hover,
-        .btn-reset:disabled:hover {
-            transform: none;
-        }
     </style>
 </head>
 <body>
-    <div class="timer-container">
+    <main class="timer-container" role="application" aria-label="カウントダウンタイマー">
         <h1>カウントダウンタイマー</h1>
 
-        <div class="time-input" id="timeInput">
+        <div class="time-input" id="timeInput" role="group" aria-label="時間設定">
             <div class="input-group">
-                <input type="number" id="hoursInput" min="0" max="99" value="0">
-                <label>時間</label>
+                <input type="number" id="hoursInput" min="0" max="99" value="0" aria-label="時間">
+                <label for="hoursInput">時間</label>
             </div>
             <div class="input-group">
-                <input type="number" id="minutesInput" min="0" max="59" value="5">
-                <label>分</label>
+                <input type="number" id="minutesInput" min="0" max="59" value="5" aria-label="分">
+                <label for="minutesInput">分</label>
             </div>
             <div class="input-group">
-                <input type="number" id="secondsInput" min="0" max="59" value="0">
-                <label>秒</label>
+                <input type="number" id="secondsInput" min="0" max="59" value="0" aria-label="秒">
+                <label for="secondsInput">秒</label>
             </div>
         </div>
 
-        <div class="timer-display" id="timerDisplay">00:05:00</div>
+        <div class="timer-display" id="timerDisplay" aria-live="polite" aria-atomic="true">00:05:00</div>
 
-        <div class="controls">
-            <button class="btn-start" id="startBtn">開始</button>
-            <button class="btn-pause" id="pauseBtn" disabled>一時停止</button>
-            <button class="btn-reset" id="resetBtn">リセット</button>
+        <div class="controls" role="group" aria-label="タイマー操作">
+            <button class="btn-start" id="startBtn" aria-label="タイマーを開始">開始</button>
+            <button class="btn-pause" id="pauseBtn" disabled aria-label="タイマーを一時停止">一時停止</button>
+            <button class="btn-reset" id="resetBtn" aria-label="タイマーをリセット">リセット</button>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Timer state
-        let totalSeconds = 0;
-        let intervalId = null;
-        let isPaused = false;
+        (function() {
+            'use strict';
 
-        // DOM elements
-        const hoursInput = document.getElementById('hoursInput');
-        const minutesInput = document.getElementById('minutesInput');
-        const secondsInput = document.getElementById('secondsInput');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const timeInput = document.getElementById('timeInput');
+            // Constants
+            const SECONDS_PER_HOUR = 3600;
+            const SECONDS_PER_MINUTE = 60;
+            const MAX_HOURS = 99;
+            const MAX_MINUTES = 59;
+            const MAX_SECONDS = 59;
+            const UPDATE_INTERVAL = 1000;
+            const DEFAULT_MINUTES = 5;
 
-        // Format time as HH:MM:SS
-        function formatTime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
+            // Timer state
+            let totalSeconds = 0;
+            let intervalId = null;
+            let isPaused = false;
 
-        // Update display
-        function updateDisplay() {
-            timerDisplay.textContent = formatTime(totalSeconds);
-        }
+            // DOM elements
+            const hoursInput = document.getElementById('hoursInput');
+            const minutesInput = document.getElementById('minutesInput');
+            const secondsInput = document.getElementById('secondsInput');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const timeInput = document.getElementById('timeInput');
 
-        // Get time from inputs
-        function getTimeFromInputs() {
-            const hours = parseInt(hoursInput.value) || 0;
-            const minutes = parseInt(minutesInput.value) || 0;
-            const seconds = parseInt(secondsInput.value) || 0;
-            return hours * 3600 + minutes * 60 + seconds;
-        }
-
-        // Start timer
-        function startTimer() {
-            if (!isPaused) {
-                totalSeconds = getTimeFromInputs();
-                if (totalSeconds === 0) return;
+            /**
+             * Validates and clamps a number input value
+             * @param {string} value - The input value to validate
+             * @param {number} min - Minimum allowed value
+             * @param {number} max - Maximum allowed value
+             * @returns {number} The validated and clamped value
+             */
+            function validateInput(value, min, max) {
+                const num = parseInt(value, 10);
+                if (isNaN(num)) return 0;
+                return Math.max(min, Math.min(max, num));
             }
 
-            isPaused = false;
-            startBtn.disabled = true;
-            pauseBtn.disabled = false;
-            timeInput.style.opacity = '0.5';
-            timeInput.style.pointerEvents = 'none';
-            timerDisplay.classList.remove('finished');
+            /**
+             * Formats seconds as HH:MM:SS
+             * @param {number} seconds - Total seconds to format
+             * @returns {string} Formatted time string
+             */
+            function formatTime(seconds) {
+                const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+                const minutes = Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+                const secs = seconds % SECONDS_PER_MINUTE;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
 
-            intervalId = setInterval(() => {
+            /**
+             * Updates the timer display
+             */
+            function updateDisplay() {
+                timerDisplay.textContent = formatTime(totalSeconds);
+            }
+
+            /**
+             * Gets total seconds from input fields
+             * @returns {number} Total seconds calculated from inputs
+             */
+            function getTimeFromInputs() {
+                const hours = validateInput(hoursInput.value, 0, MAX_HOURS);
+                const minutes = validateInput(minutesInput.value, 0, MAX_MINUTES);
+                const seconds = validateInput(secondsInput.value, 0, MAX_SECONDS);
+                return hours * SECONDS_PER_HOUR + minutes * SECONDS_PER_MINUTE + seconds;
+            }
+
+            /**
+             * Sets the enabled/disabled state of input fields
+             * @param {boolean} disabled - Whether inputs should be disabled
+             */
+            function setInputsDisabled(disabled) {
+                hoursInput.disabled = disabled;
+                minutesInput.disabled = disabled;
+                secondsInput.disabled = disabled;
+                timeInput.style.opacity = disabled ? '0.5' : '1';
+                timeInput.style.pointerEvents = disabled ? 'none' : 'auto';
+            }
+
+            /**
+             * Sets button states for the running timer
+             */
+            function setRunningState() {
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                setInputsDisabled(true);
+                timerDisplay.classList.remove('finished');
+            }
+
+            /**
+             * Sets button states for the stopped timer
+             */
+            function setStoppedState() {
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                setInputsDisabled(false);
+            }
+
+            /**
+             * Starts the timer
+             */
+            function startTimer() {
+                if (!isPaused) {
+                    totalSeconds = getTimeFromInputs();
+                    if (totalSeconds === 0) return;
+                }
+
+                isPaused = false;
+                startBtn.textContent = '開始';
+                setRunningState();
+
+                intervalId = setInterval(tick, UPDATE_INTERVAL);
+            }
+
+            /**
+             * Timer tick function called every second
+             */
+            function tick() {
                 if (totalSeconds > 0) {
                     totalSeconds--;
                     updateDisplay();
                 } else {
-                    clearInterval(intervalId);
-                    timerDisplay.classList.add('finished');
-                    startBtn.disabled = false;
-                    pauseBtn.disabled = true;
-                    timeInput.style.opacity = '1';
-                    timeInput.style.pointerEvents = 'auto';
+                    finishTimer();
                 }
-            }, 1000);
-        }
+            }
 
-        // Pause timer
-        function pauseTimer() {
-            clearInterval(intervalId);
-            isPaused = true;
-            startBtn.disabled = false;
-            startBtn.textContent = '再開';
-            pauseBtn.disabled = true;
-        }
+            /**
+             * Handles timer completion
+             */
+            function finishTimer() {
+                clearInterval(intervalId);
+                intervalId = null;
+                timerDisplay.classList.add('finished');
+                setStoppedState();
+            }
 
-        // Reset timer
-        function resetTimer() {
-            clearInterval(intervalId);
-            isPaused = false;
-            totalSeconds = getTimeFromInputs();
-            updateDisplay();
-            startBtn.disabled = false;
-            startBtn.textContent = '開始';
-            pauseBtn.disabled = true;
-            timeInput.style.opacity = '1';
-            timeInput.style.pointerEvents = 'auto';
-            timerDisplay.classList.remove('finished');
-        }
+            /**
+             * Pauses the timer
+             */
+            function pauseTimer() {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+                isPaused = true;
+                startBtn.disabled = false;
+                startBtn.textContent = '再開';
+                pauseBtn.disabled = true;
+            }
 
-        // Input change handler
-        function handleInputChange() {
-            if (!intervalId && !isPaused) {
-                // Clamp values
-                hoursInput.value = Math.max(0, Math.min(99, parseInt(hoursInput.value) || 0));
-                minutesInput.value = Math.max(0, Math.min(59, parseInt(minutesInput.value) || 0));
-                secondsInput.value = Math.max(0, Math.min(59, parseInt(secondsInput.value) || 0));
+            /**
+             * Resets the timer
+             */
+            function resetTimer() {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+                isPaused = false;
                 totalSeconds = getTimeFromInputs();
                 updateDisplay();
+                startBtn.disabled = false;
+                startBtn.textContent = '開始';
+                pauseBtn.disabled = true;
+                setInputsDisabled(false);
+                timerDisplay.classList.remove('finished');
             }
-        }
 
-        // Event listeners
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resetBtn.addEventListener('click', resetTimer);
-        hoursInput.addEventListener('change', handleInputChange);
-        minutesInput.addEventListener('change', handleInputChange);
-        secondsInput.addEventListener('change', handleInputChange);
+            /**
+             * Handles input field changes
+             */
+            function handleInputChange() {
+                if (!intervalId && !isPaused) {
+                    // Validate and clamp input values
+                    hoursInput.value = validateInput(hoursInput.value, 0, MAX_HOURS);
+                    minutesInput.value = validateInput(minutesInput.value, 0, MAX_MINUTES);
+                    secondsInput.value = validateInput(secondsInput.value, 0, MAX_SECONDS);
+                    totalSeconds = getTimeFromInputs();
+                    updateDisplay();
+                }
+            }
 
-        // Initialize display
-        handleInputChange();
+            /**
+             * Handles input field input events (for immediate validation)
+             */
+            function handleInputInput(event) {
+                if (!intervalId && !isPaused) {
+                    const input = event.target;
+                    const max = parseInt(input.max, 10);
+                    const min = parseInt(input.min, 10);
+
+                    // Allow empty for editing, but validate on change
+                    if (input.value === '' || input.value === '-') {
+                        return;
+                    }
+
+                    const value = parseInt(input.value, 10);
+                    if (!isNaN(value) && (value < min || value > max)) {
+                        input.value = validateInput(input.value, min, max);
+                    }
+                }
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resetBtn.addEventListener('click', resetTimer);
+
+            [hoursInput, minutesInput, secondsInput].forEach(input => {
+                input.addEventListener('change', handleInputChange);
+                input.addEventListener('input', handleInputInput);
+            });
+
+            // Initialize display with default values
+            handleInputChange();
+        })();
     </script>
 </body>
 </html>
