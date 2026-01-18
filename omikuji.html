@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>おみくじアプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', 'Meiryo', 'メイリオ', 'Osaka', 'MS PGothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 40px;
+        }
+
+        .omikuji-box {
+            background: linear-gradient(145deg, #f3f4f6, #ffffff);
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .omikuji-box.show {
+            border-color: #667eea;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .fortune {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 20px 0;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .fortune.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .fortune.daikichi {
+            color: #ef4444;
+            text-shadow: 2px 2px 4px rgba(239, 68, 68, 0.3);
+        }
+
+        .fortune.chukichi {
+            color: #f59e0b;
+            text-shadow: 2px 2px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .fortune.shokichi {
+            color: #10b981;
+            text-shadow: 2px 2px 4px rgba(16, 185, 129, 0.3);
+        }
+
+        .fortune.kyo {
+            color: #6b7280;
+            text-shadow: 2px 2px 4px rgba(107, 114, 128, 0.3);
+        }
+
+        .draw-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .draw-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .draw-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .draw-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .lucky-message {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lucky-message.show {
+            opacity: 1;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .fortune {
+                font-size: 3rem;
+            }
+
+            .draw-button {
+                padding: 12px 40px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎴 おみくじ</h1>
+        <p class="subtitle">今日の運勢を占いましょう</p>
+
+        <div class="omikuji-box" id="omikujiBox">
+            <p class="result-text" id="resultText">おみくじを引いてください</p>
+            <div class="fortune" id="fortune">？</div>
+            <p class="lucky-message" id="luckyMessage"></p>
+        </div>
+
+        <button class="draw-button" id="drawButton" onclick="drawOmikuji()">
+            おみくじを引く
+        </button>
+    </div>
+
+    <script>
+        const fortunes = [
+            {
+                name: '大吉',
+                class: 'daikichi',
+                message: '素晴らしい一日になりそう！何をしてもうまくいきます✨'
+            },
+            {
+                name: '中吉',
+                class: 'chukichi',
+                message: '良いことがあります。前向きに過ごしましょう！😊'
+            },
+            {
+                name: '小吉',
+                class: 'shokichi',
+                message: '小さな幸せがたくさんあります。日常を楽しみましょう🌸'
+            },
+            {
+                name: '凶',
+                class: 'kyo',
+                message: '今日は慎重に行動しましょう。明日は良い日になります💪'
+            }
+        ];
+
+        let isDrawing = false;
+
+        function drawOmikuji() {
+            if (isDrawing) return;
+
+            isDrawing = true;
+            const button = document.getElementById('drawButton');
+            const omikujiBox = document.getElementById('omikujiBox');
+            const fortuneElement = document.getElementById('fortune');
+            const resultText = document.getElementById('resultText');
+            const luckyMessage = document.getElementById('luckyMessage');
+
+            button.disabled = true;
+            button.textContent = '占い中...';
+
+            // Reset previous result
+            fortuneElement.classList.remove('show', 'daikichi', 'chukichi', 'shokichi', 'kyo');
+            luckyMessage.classList.remove('show');
+            omikujiBox.classList.remove('show');
+
+            // Add shake animation
+            omikujiBox.classList.add('shaking');
+
+            // Simulate drawing time
+            setTimeout(() => {
+                omikujiBox.classList.remove('shaking');
+
+                // Random fortune (with higher probability for better results)
+                const weightedFortunes = [
+                    ...Array(3).fill(0),  // 大吉 - 30%
+                    ...Array(3).fill(1),  // 中吉 - 30%
+                    ...Array(3).fill(2),  // 小吉 - 30%
+                    ...Array(1).fill(3)   // 凶 - 10%
+                ];
+
+                const randomIndex = weightedFortunes[Math.floor(Math.random() * weightedFortunes.length)];
+                const fortune = fortunes[randomIndex];
+
+                // Display result
+                resultText.textContent = 'あなたの運勢は...';
+                fortuneElement.textContent = fortune.name;
+                fortuneElement.classList.add('show', fortune.class);
+                luckyMessage.textContent = fortune.message;
+                luckyMessage.classList.add('show');
+                omikujiBox.classList.add('show');
+
+                button.disabled = false;
+                button.textContent = 'もう一度引く';
+                isDrawing = false;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
