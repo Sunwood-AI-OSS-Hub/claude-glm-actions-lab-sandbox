@@ -69,6 +69,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
         run: |
-          .github/scripts/create-pr.sh \
+          python3 .github/scripts/create-pr.py \
             "${{ steps.branch.outputs.name }}" \
             "${{ github.event.issue.number }}"
