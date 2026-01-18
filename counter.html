@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カウンターアプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .counter-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .counter-display {
+            font-size: 80px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            transition: transform 0.2s ease;
+        }
+
+        .counter-display.updated {
+            transform: scale(1.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-size: 24px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+
+        .btn-decrease {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-decrease:hover {
+            background: #ee5a5a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-decrease:active {
+            transform: translateY(0);
+        }
+
+        .btn-increase {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-increase:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(81, 207, 102, 0.4);
+        }
+
+        .btn-increase:active {
+            transform: translateY(0);
+        }
+
+        .btn-reset {
+            background: #868e96;
+            color: white;
+            font-size: 16px;
+            padding: 12px 25px;
+        }
+
+        .btn-reset:hover {
+            background: #748089;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(134, 142, 150, 0.4);
+        }
+
+        .btn-reset:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="counter-container">
+        <h1>カウンター</h1>
+        <div class="counter-display" id="counterDisplay">0</div>
+        <div class="button-group">
+            <button class="btn-decrease" id="decreaseBtn" aria-label="減らす">−</button>
+            <button class="btn-increase" id="increaseBtn" aria-label="増やす">+</button>
+        </div>
+        <button class="btn-reset" id="resetBtn">リセット</button>
+    </div>
+
+    <script>
+        let count = 0;
+        const counterDisplay = document.getElementById('counterDisplay');
+        const decreaseBtn = document.getElementById('decreaseBtn');
+        const increaseBtn = document.getElementById('increaseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        function updateDisplay() {
+            counterDisplay.textContent = count;
+
+            // アニメーション効果
+            counterDisplay.classList.add('updated');
+            setTimeout(() => {
+                counterDisplay.classList.remove('updated');
+            }, 200);
+
+            // 色の変化
+            if (count > 0) {
+                counterDisplay.style.color = '#51cf66';
+            } else if (count < 0) {
+                counterDisplay.style.color = '#ff6b6b';
+            } else {
+                counterDisplay.style.color = '#667eea';
+            }
+        }
+
+        decreaseBtn.addEventListener('click', () => {
+            count--;
+            updateDisplay();
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            count++;
+            updateDisplay();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            count = 0;
+            updateDisplay();
+        });
+
+        // キーボード操作サポート
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' || e.key === '+') {
+                count++;
+                updateDisplay();
+            } else if (e.key === 'ArrowDown' || e.key === '-') {
+                count--;
+                updateDisplay();
+            } else if (e.key === 'r' || e.key === 'R' || e.key === 'Escape') {
+                count = 0;
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
