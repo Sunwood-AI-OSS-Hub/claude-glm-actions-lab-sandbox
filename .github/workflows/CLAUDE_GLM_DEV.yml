@@ -87,8 +87,9 @@ jobs:
 
           if [ -n "$CREATE_PR_URL" ]; then
             # URLからtitleとbodyパラメータを抽出
+            # titleは最初の&まで、bodyはtitle以降の全て
             ENCODED_TITLE=$(echo "$CREATE_PR_URL" | grep -oP 'title=\K[^&]+')
-            ENCODED_BODY=$(echo "$CREATE_PR_URL" |grep -oP 'body=\K[^&]+')
+            ENCODED_BODY=$(echo "$CREATE_PR_URL" | sed 's/.*body=//' || echo "")
 
             # URLデコード（python3を使用）
             PR_TITLE=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote('$ENCODED_TITLE'))")
