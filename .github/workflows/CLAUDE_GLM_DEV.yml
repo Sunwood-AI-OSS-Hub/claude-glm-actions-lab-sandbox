@@ -5,8 +5,6 @@ on:
     types: [created]
   issues:
     types: [opened, assigned]
-  pull_request:
-    types: [opened, synchronize]
   pull_request_review_comment:
     types: [created]
 
@@ -20,8 +18,7 @@ jobs:
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude')) ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.body, '@claude'))
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
     runs-on: ubuntu-latest
 
     permissions:
@@ -40,43 +37,25 @@ jobs:
         id: branch
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]] || [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
             echo "name=claude-glm-dev-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
           else
             echo "name=claude-glm-dev-issue-${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
           fi
 
-      # ★Issue/PRのBodyからキャラクターとタスクを抽出してCLAUDE.mdに追記
-      - name: Setup CLAUDE.md with character and task
-        id: setup
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "issues" ]] || [[ "${{ github.event_name == "issue_comment" ]]; then
-            BODY="${{ github.event.issue.body }}"
-          else
-            BODY="${{ github.event.pull_request.body }}"
-          fi
-
-          # キャラクターとタスクをマージ
-          python3 .github/scripts/merge-agent.py \
-            "${{ github.event.issue.number || github.event.pull_request.number }}" \
-            ".claude/CLAUDE.md.tmp"
-
-          # 元の.claude/CLAUDE.mdがあれば、それをベースに追加設定をマージ
-          if [ -f ".claude/CLAUDE.md" ]; then
-            cat .claude/CLAUDE.md .claude/CLAUDE.md.tmp > CLAUDE.md
-          else
-            cp .claude/CLAUDE.md.tmp CLAUDE.md
-          fi
-
       - uses: anthropics/claude-code-action@v1
         with:
           trigger_phrase: "@claude"
+
+          # ★ブランチ名を固定（タイムスタンプなし）
           branch_prefix: ""
           branch_name_template: ${{ steps.branch.outputs.name }}
+
+          # ★追加：バリデーション通過用に必要
           anthropic_api_key: ${{ secrets.ZAI_API_KEY }}
-          prompt: "${{ github.event.issue.body }}"
+
         env:
+          # GLMに向ける設定
           ANTHROPIC_BASE_URL: https://api.z.ai/api/anthropic
           ANTHROPIC_AUTH_TOKEN: ${{ secrets.ZAI_API_KEY }}
           API_TIMEOUT_MS: "3000000"
@@ -89,7 +68,7 @@ jobs:
         if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
-          INCLUDE_TASK_SUMMARY: "true"
+          INCLUDE_TASK_SUMMARY: "true"  # タスクサマリー（---より後ろの報告内容）を含めるかどうか
         run: |
           python3 .github/scripts/create-pr.py \
             "${{ steps.branch.outputs.name }}" \
