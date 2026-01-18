@@ -50,7 +50,8 @@ def main():
     comments = json.loads(issue_data) if issue_data else []
     claude_comment = ""
     for comment in reversed(comments):
-        if comment.get("author", {}).get("login") == "claude[bot]":
+        # Claude bot's login is "claude" (not "claude[bot]")
+        if comment.get("author", {}).get("login") == "claude":
             claude_comment = comment.get("body", "")
             break
     print(f"[DEBUG] Claude comment: {claude_comment[:100] if claude_comment else '(empty)'}...", file=sys.stderr)
