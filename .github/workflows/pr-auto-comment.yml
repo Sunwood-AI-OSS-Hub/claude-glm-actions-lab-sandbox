@@ -8,14 +8,8 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  # 環境変数でON/OFFを制御（デフォルトはtrue）
-  ENABLE_PR_AUTO_COMMENT: ${{ vars.ENABLE_PR_AUTO_COMMENT || 'true' }}
-
 jobs:
   auto-comment:
-    # 環境変数がtrueの場合のみ実行
-    if: env.ENABLE_PR_AUTO_COMMENT == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Comment on PR
@@ -23,9 +17,17 @@ jobs:
         with:
           github-token: ${{ secrets.GH_PAT_ONIZUKA }}
           script: |
+            // 環境変数でON/OFFを制御（デフォルトはtrue）
+            const enabled = '${{ vars.ENABLE_PR_AUTO_COMMENT }}' !== 'false';
+
+            if (!enabled) {
+              console.log('PR Auto Comment is disabled. Skipping...');
+              return;
+            }
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: '@claude レビューと修正をお願いします。'
-            })
+            });
