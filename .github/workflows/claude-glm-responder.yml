@@ -20,13 +20,15 @@ jobs:
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude')) ||
+      (github.event_name == 'pull_request' && env.AUTO_REVIEW_PR == 'true')
     runs-on: ubuntu-latest
 
     # デフォルト設定（必要に応じてオーバーライド可能）
     env:
       CREATE_AUTO_PR: "true"              # Issueからのトリガー時に自動でPRを作成するかどうか
       INCLUDE_TASK_SUMMARY: "true"        # タスクサマリー（---より後ろの報告内容）を含めるかどうか
+      AUTO_REVIEW_PR: "true"              # PR作成時に自動でレビューを実行するかどうか
 
     permissions:
       contents: write
@@ -44,7 +46,7 @@ jobs:
         id: branch
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]] || [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "name=claude-glm-dev-pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
           else
             echo "name=claude-glm-dev-issue-${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
@@ -88,14 +90,14 @@ jobs:
             "${{ steps.branch.outputs.name }}" \
             "${{ github.event.issue.number }}"
 
-  # ★PRが作成された時に自動でレビューリクエストコメントを投稿
+  # ★PRが作成された時に自動で通知コメントを投稿
   auto_comment:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     # デフォルト設定
     env:
-      AUTO_REVIEW_COMMENT: "true"         # PR作成時に自動でレビューリクエストコメントをするかどうか
+      AUTO_REVIEW_COMMENT: "true"         # PR作成時に自動で通知コメントをするかどうか
 
     permissions:
       pull-requests: write
@@ -114,4 +116,4 @@ jobs:
           fi
 
           gh pr comment ${{ github.event.pull_request.number }} \
-            --body "@claude レビューと修正をお願いします。"
+            --body "🤖 自動レビューが開始されました。"
