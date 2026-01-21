@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D ダイスアプリ 🎲</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <h1>🎲 3D ダイスアプリ 🎲</h1>
+            <p class="subtitle">サイコロを振ってみよう！</p>
+        </header>
+
+        <section class="dice-section" aria-label="ダイス表示エリア">
+            <div class="scene">
+                <div class="cube" aria-hidden="true">
+                    <div class="face front">
+                        <div class="dot"></div>
+                    </div>
+                    <div class="face back">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="face right">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="face left">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="face top">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <div class="face bottom">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="result-section" aria-label="結果表示エリア">
+            <div id="result" class="result" role="status" aria-live="polite" aria-atomic="true">
+                <span class="result-label">出目:</span>
+                <span class="result-value">-</span>
+            </div>
+        </section>
+
+        <section class="controls" aria-label="操作エリア">
+            <button id="rollButton" class="roll-button" aria-label="サイコロを振る">
+                サイコロを振る 🎲
+            </button>
+        </section>
+
+        <section class="history-section" aria-label="履歴エリア">
+            <h2>📜 過去の結果</h2>
+            <ul id="historyList" class="history-list" role="list" aria-label="結果履歴">
+                <li class="history-empty">まだサイコロを振っていません</li>
+            </ul>
+        </section>
+
+        <footer class="footer">
+            <p>キーボードショートカット: <kbd>Space</kbd> または <kbd>Enter</kbd> でサイコロを振る</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
