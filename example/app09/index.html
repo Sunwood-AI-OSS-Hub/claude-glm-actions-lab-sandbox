@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カラーピッカー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 カラーピッカー</h1>
+
+        <div class="color-preview" id="colorPreview">
+            <div class="color-info">
+                <p class="color-value" id="hexValue">#3B82F6</p>
+                <p class="color-label">HEX</p>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="colorInput">色を選択</label>
+                <input type="color" id="colorInput" value="#3B82F6">
+            </div>
+
+            <div class="input-group">
+                <label for="hexInput">HEX</label>
+                <input type="text" id="hexInput" value="#3B82F6" maxlength="7">
+            </div>
+
+            <div class="input-group">
+                <label for="rgbInput">RGB</label>
+                <input type="text" id="rgbInput" value="rgb(59, 130, 246)" readonly>
+            </div>
+
+            <div class="input-group">
+                <label for="hslInput">HSL</label>
+                <input type="text" id="hslInput" value="hsl(217, 91%, 60%)" readonly>
+            </div>
+        </div>
+
+        <div class="palette">
+            <h2>パレット</h2>
+            <div class="palette-colors" id="palette">
+                <div class="palette-color" style="background-color: #EF4444;" data-color="#EF4444"></div>
+                <div class="palette-color" style="background-color: #F97316;" data-color="#F97316"></div>
+                <div class="palette-color" style="background-color: #EAB308;" data-color="#EAB308"></div>
+                <div class="palette-color" style="background-color: #22C55E;" data-color="#22C55E"></div>
+                <div class="palette-color" style="background-color: #3B82F6;" data-color="#3B82F6"></div>
+                <div class="palette-color" style="background-color: #8B5CF6;" data-color="#8B5CF6"></div>
+                <div class="palette-color" style="background-color: #EC4899;" data-color="#EC4899"></div>
+                <div class="palette-color" style="background-color: #6B7280;" data-color="#6B7280"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
