@@ -1,5 +1,8 @@
 // カラーピッカーアプリ
 class ColorPicker {
+    static DEFAULT_COLOR = '#3B82F6';
+    static SHADOW_OPACITY = '4d'; // 30% opacity
+
     constructor() {
         this.colorInput = document.getElementById('colorInput');
         this.hexInput = document.getElementById('hexInput');
@@ -8,6 +11,13 @@ class ColorPicker {
         this.colorPreview = document.getElementById('colorPreview');
         this.hexValue = document.getElementById('hexValue');
         this.paletteColors = document.querySelectorAll('.palette-color');
+
+        // nullチェック
+        if (!this.colorInput || !this.hexInput || !this.rgbInput ||
+            !this.hslInput || !this.colorPreview || !this.hexValue) {
+            console.error('必要な要素が見つかりません');
+            return;
+        }
 
         this.init();
     }
@@ -26,7 +36,7 @@ class ColorPicker {
         });
 
         // 初期色を設定
-        this.setColor('#3B82F6');
+        this.setColor(ColorPicker.DEFAULT_COLOR);
     }
 
     setColor(hex) {
@@ -48,8 +58,11 @@ class ColorPicker {
 
         // プレビューを更新
         this.colorPreview.style.backgroundColor = normalizedHex;
-        this.colorPreview.style.boxShadow = `0 10px 30px ${normalizedHex}4d`;
+        this.colorPreview.style.boxShadow = `0 10px 30px ${normalizedHex}${ColorPicker.SHADOW_OPACITY}`;
         this.hexValue.textContent = normalizedHex;
+
+        // ARIAラベルを更新
+        this.colorPreview.setAttribute('aria-label', `現在選択中の色: ${normalizedHex}`);
     }
 
     handleHexInput(value) {

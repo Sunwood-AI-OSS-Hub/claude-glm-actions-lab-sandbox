@@ -136,8 +136,10 @@ h1 {
     aspect-ratio: 1;
     border-radius: 10px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: none;
+    padding: 0;
 }
 
 .palette-color:hover {
@@ -147,4 +149,9 @@ h1 {
 
 .palette-color:active {
     transform: scale(0.95);
+}
+
+.palette-color:focus {
+    outline: 3px solid #3B82F6;
+    outline-offset: 2px;
 }
