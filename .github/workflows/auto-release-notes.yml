@@ -85,31 +85,31 @@ jobs:
             mv /tmp/diff-truncated.txt /tmp/diff.txt
           fi
 
-          # Issue本文テンプレートを作成
+          # Issue本文テンプレートを作成（一重引用符で囲んで変数展開を防ぐ）
           cat > /tmp/issue-template.md << 'TEMPLATEEOF'
           @claude リリースノートを生成してください。
 
           ## リリース情報
-          - タグ名: `CURRENT_TAG_VAL`
-          - バージョン: `CURRENT_VERSION_VAL`
-          - 前回のタグ: `PREVIOUS_TAG_VAL`
+          - タグ名: `__CURRENT_TAG__`
+          - バージョン: `__CURRENT_VERSION__`
+          - 前回のタグ: `__PREVIOUS_TAG__`
 
           ## 変更されたファイル
 
           ```
-          CHANGED_FILES_VAL
+          __CHANGED_FILES__
           ```
 
           ## 変更統計
 
           ```
-          DIFF_STAT_VAL
+          __DIFF_STAT__
           ```
 
           ## コード差分
 
           ```diff
-          DIFF_CONTENT_VAL
+          __DIFF_CONTENT__
           ```
 
           ---
@@ -117,29 +117,31 @@ jobs:
           琴音（コトネ）キャラクターで、美しいリリースノートを紡いでください。
 
           生成後、GitHub Release を作成してください。
+
+          ## 🚨 重要: Release 作成のルール
+
+          - Release の本文は必ずファイルに保存して `--notes-file` で渡してください（`--notes` / `$(cat ...)` / heredoc で本文をコマンドに埋め込まない）
+          - Issue コメントには長いコマンド例は貼らず、Release URL と要点だけを報告してください
           TEMPLATEEOF
 
-          # 値をファイルとして準備（特殊文字をエスケープ）
-          sed 's/&/\&/g; s/</\</g; s/>/\>/g' /tmp/changed-files.txt > /tmp/files-safe.txt
-          sed 's/&/\&/g; s/</\</g; s/>/\>/g' /tmp/diff-stat.txt > /tmp/stat-safe.txt
-          sed 's/&/\&/g; s/</\</g; s/>/\>/g' /tmp/diff.txt > /tmp/diff-safe.txt
+          # タグ情報のプレースホルダーを置換（値を直接埋め込み）
+          sed -i "s|__CURRENT_TAG__|${{ steps.prev-tag.outputs.current_tag }}|g" /tmp/issue-template.md
+          sed -i "s|__CURRENT_VERSION__|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-template.md
+          sed -i "s|__PREVIOUS_TAG__|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-template.md
 
-          # プレースホルダーを置換
-          sed -i "s|CURRENT_TAG_VAL|${{ steps.prev-tag.outputs.current_tag }}|g" /tmp/issue-template.md
-          sed -i "s|CURRENT_VERSION_VAL|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-template.md
-          sed -i "s|PREVIOUS_TAG_VAL|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-template.md
+          # ファイル内容を埋め込み（r コマンドを使用）
+          # これらのファイルには `${{` や `` ` `` などの特殊文字が含まれる可能性があるが、
+          # ファイルから読み込むのでシェル変数展開の影響を受けない
+          sed -i "/__CHANGED_FILES__/r /tmp/changed-files.txt" /tmp/issue-template.md
+          sed -i "/__CHANGED_FILES__/d" /tmp/issue-template.md
 
-          # ファイル内容を埋め込み
-          sed -i '/CHANGED_FILES_VAL/r /tmp/files-safe.txt' /tmp/issue-template.md
-          sed -i '/CHANGED_FILES_VAL/d' /tmp/issue-template.md
+          sed -i "/__DIFF_STAT__/r /tmp/diff-stat.txt" /tmp/issue-template.md
+          sed -i "/__DIFF_STAT__/d" /tmp/issue-template.md
 
-          sed -i '/DIFF_STAT_VAL/r /tmp/stat-safe.txt' /tmp/issue-template.md
-          sed -i '/DIFF_STAT_VAL/d' /tmp/issue-template.md
+          sed -i "/__DIFF_CONTENT__/r /tmp/diff.txt" /tmp/issue-template.md
+          sed -i "/__DIFF_CONTENT__/d" /tmp/issue-template.md
 
-          sed -i '/DIFF_CONTENT_VAL/r /tmp/diff-safe.txt' /tmp/issue-template.md
-          sed -i '/DIFF_CONTENT_VAL/d' /tmp/issue-template.md
-
-          # Issueを作成
+          # Issueを作成（--body-file を使用して、シェルのメタ文字展開を回避）
           ISSUE_URL=$(gh issue create \
             --title "$TITLE" \
             --body-file /tmp/issue-template.md)

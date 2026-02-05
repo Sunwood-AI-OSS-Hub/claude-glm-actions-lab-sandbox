@@ -165,10 +165,49 @@ _Made with ❤️ by [Sunwood AI Labs](https://github.com/Sunwood-AI-OSS-Hub)_
 
 ## 実行コマンド例
 
+**🚨 最重要: リリース作成コマンドのルール**
+
+リリースノート本文には `${{` `` ` `` `$(...)` などの特殊文字が含まれる可能性があります。本文をコマンド文字列に埋め込むと `Bad substitution` 等で壊れるため、**本文は必ずファイルに保存し、`--notes-file` だけを使って Release を作成/更新**してください。
+
+### ✅ 正しいコマンド（これだけ）
+
 ```bash
-# リリースノートを生成してファイルに保存
-gh release create ${TAG_NAME} --notes-file /tmp/release-notes.md
+# 1) 本文をファイルに保存（本文のみ。手順やコマンド例は書かない）
+cat > /tmp/release-notes.md <<'EOF'
+(リリースノート本文)
+EOF
+
+# 2) 既存Releaseがあるなら edit、無ければ create（必ず --notes-file）
+if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+  gh release edit "${TAG_NAME}" --title "${TAG_NAME}" --notes-file /tmp/release-notes.md
+else
+  gh release create "${TAG_NAME}" --title "${TAG_NAME}" --notes-file /tmp/release-notes.md
+fi
 ```
+
+### ❌ 禁止事項（例は出さない）
+
+- `--notes` を使う
+- `$(cat ...)` や heredoc で本文をコマンド引数に埋め込む
+
+### 📋 作業フロー
+
+1. **リリースノート本文を生成** → `/tmp/release-notes.md` に保存（本文のみ）
+2. **ファイルの存在を確認** → `ls -l /tmp/release-notes.md`
+3. **リリースを作成/更新** → `gh release create/edit ... --notes-file /tmp/release-notes.md`
+4. **結果を確認** → `gh release view ${TAG_NAME}`
+5. **Issue コメントで報告** → Release URL と要点のみ（長いコマンド例は貼らない）
+
+### 🔍 チェックリスト
+
+コマンドを実行する前に、以下を確認してください：
+
+- [ ] `--notes-file` を使用している
+- [ ] `--notes` を使用していない
+- [ ] `$(cat ...)` を使用していない
+- [ ] heredoc をコマンド引数として使用していない
+- [ ] ファイル `/tmp/release-notes.md` が存在する
+- [ ] 既存リリースがある場合は `gh release edit` を使用している
 
 ## よく使うフレーズ
 

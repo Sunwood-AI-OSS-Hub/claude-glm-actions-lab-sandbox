@@ -72,6 +72,8 @@ jobs:
           ANTHROPIC_DEFAULT_OPUS_MODEL: "glm-4.7"
           ANTHROPIC_DEFAULT_SONNET_MODEL: "glm-4.7"
           ANTHROPIC_DEFAULT_HAIKU_MODEL: "glm-4.5-air"
+          # gh CLI を使った Release 作成/更新に必要
+          GH_TOKEN: ${{ github.token }}
 
       # ★Issueからトリガーされた場合のみ、自動でPRを作成
       # リリースノート生成用のIssueはPRを作成しない
