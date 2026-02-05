@@ -142,7 +142,6 @@ jobs:
           # Issueを作成
           gh issue create \
             --title "$TITLE" \
-            --body-file /tmp/issue-template.md \
-            --label "release-notes"
+            --body-file /tmp/issue-template.md
 
           echo "✅ Issue created successfully!"
