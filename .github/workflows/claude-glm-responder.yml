@@ -75,6 +75,53 @@ jobs:
           # gh CLI を使った Release 作成/更新に必要
           GH_TOKEN: ${{ github.token }}
 
+      # リリースノート生成Issueの場合は、Claudeが保存したノートファイルからReleaseを自動作成/更新する
+      - name: Create or Update Release (release-note issues)
+        if: |
+          (github.event_name == 'issue_comment' || github.event_name == 'issues') &&
+          startsWith(github.event.issue.title, 'リリースノート生成:')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TITLE="${{ github.event.issue.title }}"
+          TAG_NAME="${TITLE#リリースノート生成: }"
+          TAG_NAME="$(echo "$TAG_NAME" | sed -E 's/^ +//; s/ +$//')"
+
+          echo "Release tag: $TAG_NAME"
+
+          # Claude側の出力ファイル名は揺れることがあるので、候補を順に探す
+          NOTES_CANDIDATES=(
+            "/tmp/release-notes-${TAG_NAME}.md"
+            "/tmp/release-notes-${TAG_NAME}.markdown"
+            "/tmp/release-notes.md"
+          )
+
+          NOTES_FILE=""
+          for f in "${NOTES_CANDIDATES[@]}"; do
+            if [[ -f "$f" ]]; then
+              NOTES_FILE="$f"
+              break
+            fi
+          done
+
+          if [[ -z "$NOTES_FILE" ]]; then
+            echo "ERROR: Release notes file not found. Looked for:"
+            printf '  - %s\n' "${NOTES_CANDIDATES[@]}"
+            exit 1
+          fi
+
+          echo "Using notes file: $NOTES_FILE"
+          ls -la "$NOTES_FILE"
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file "$NOTES_FILE"
+          fi
+
       # ★Issueからトリガーされた場合のみ、自動でPRを作成
       # リリースノート生成用のIssueはPRを作成しない
       - name: Create PR (if from issue)
