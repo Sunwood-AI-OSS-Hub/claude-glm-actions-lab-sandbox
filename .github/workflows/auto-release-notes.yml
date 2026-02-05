@@ -241,19 +241,26 @@ jobs:
           CURRENT_VERSION: ${{ steps.prev-tag.outputs.current_version }}
           PREVIOUS_TAG: ${{ steps.prev-tag.outputs.previous_tag }}
 
-      - name: Display generated release notes
-        if: always()
+      - name: Check release notes file
+        id: check-notes
         run: |
           if [[ -f /tmp/release-notes.md ]]; then
-            echo "## 📝 Generated Release Notes"
-            echo ""
-            cat /tmp/release-notes.md
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Release notes file exists"
           else
-            echo "No release notes were generated."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "❌ Release notes file not found"
           fi
 
+      - name: Display generated release notes
+        if: steps.check-notes.outputs.exists == 'true'
+        run: |
+          echo "## 📝 Generated Release Notes"
+          echo ""
+          cat /tmp/release-notes.md
+
       - name: Create GitHub Release
-        if: env.CREATE_GITHUB_RELEASE == 'true' && hashFiles('/tmp/release-notes.md') != ''
+        if: env.CREATE_GITHUB_RELEASE == 'true' && steps.check-notes.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
