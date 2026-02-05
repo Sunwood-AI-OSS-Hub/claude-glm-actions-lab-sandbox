@@ -74,8 +74,11 @@ jobs:
           ANTHROPIC_DEFAULT_HAIKU_MODEL: "glm-4.5-air"
 
       # ★Issueからトリガーされた場合のみ、自動でPRを作成
+      # リリースノート生成用のIssueはPRを作成しない
       - name: Create PR (if from issue)
-        if: github.event_name == 'issues'
+        if: |
+          github.event_name == 'issues' &&
+          !startsWith(github.event.issue.title, 'リリースノート生成')
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
         run: |
