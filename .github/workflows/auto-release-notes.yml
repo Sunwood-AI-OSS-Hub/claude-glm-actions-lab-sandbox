@@ -150,6 +150,8 @@ jobs:
           ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
 
           # @claude メンションを追加して responder をトリガー
+          # github-actions[bot] によるコメントはトリガーされないため PAT を使用
+          export GH_TOKEN="${{ secrets.GH_PAT_ONIZUKA }}"
           gh issue comment "$ISSUE_NUMBER" --body "@claude"
 
           echo "✅ @claude comment added to trigger responder"
