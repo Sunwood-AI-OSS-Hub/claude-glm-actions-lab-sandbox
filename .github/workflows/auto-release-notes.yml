@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       header-path: ${{ steps.generate.outputs.header-path }}
+      header-ext: ${{ steps.generate.outputs.header-ext }}
 
     steps:
       - name: Checkout code
