@@ -64,7 +64,11 @@ jobs:
           mkdir -p "${HEADER_DIR}"
 
           # HEADER_MODE に応じて拡張子とモードを設定
-          if [ "$HEADER_MODE" = "svg" ]; then
+          # GitHub Variables で "SVG" など大文字になることがあるので正規化する
+          HEADER_MODE_NORM="$(printf '%s' "${HEADER_MODE:-}" | tr '[:upper:]' '[:lower:]' | sed -E 's/^ +//; s/ +$//')"
+          echo "HEADER_MODE(raw)='${HEADER_MODE:-}' normalized='${HEADER_MODE_NORM}'"
+
+          if [ "$HEADER_MODE_NORM" = "svg" ]; then
             HEADER_EXT="svg"
             MODE_ARG="--format svg"
             echo "🎨 Using SVG vector mode..."
