@@ -106,6 +106,25 @@ python3 .github/scripts/generate-header.py --tag v1.0.0
 export FAL_KEY='your-fal-ai-api-key'
 ```
 
+### GitHub Actionsでの環境変数設定
+
+| 環境変数 | 説明 | デフォルト値 |
+|----------|-------------|-------------|
+| `USE_LOCAL_SCRIPT` | ローカルスクリプトを使うか | `false`（リモート使用） |
+
+#### ローカルスクリプトを使う場合
+
+GitHubリポジトリの **Settings > Variables and secrets > Actions** で：
+
+1. **Variables > New repository variable**
+2. Name: `USE_LOCAL_SCRIPT`
+3. Value: `true`
+
+##### 設定値の動作
+
+- 設定なしまたは `false` → リモートスクリプトを実行（デフォルト）
+- `true` → ローカルスクリプトを実行
+
 ---
 
 ## License

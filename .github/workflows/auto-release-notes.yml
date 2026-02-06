@@ -51,14 +51,26 @@ jobs:
         id: generate
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
+          USE_LOCAL_SCRIPT: ${{ vars.USE_LOCAL_SCRIPT || 'false' }}
         run: |
           HEADER_DIR="./assets/release-headers"
           mkdir -p "${HEADER_DIR}"
           HEADER_PATH="${HEADER_DIR}/header-${{ steps.tag-info.outputs.tag }}.png"
 
-          # リモートからスクリプトを取得して実行するニャ！🐱
-          curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py \
-            | python3 - --tag "${{ steps.tag-info.outputs.tag }}" --theme auto --output "${HEADER_PATH}"
+          # USE_LOCAL_SCRIPTでローカル/リモートを切り替えニャ！🐱
+          if [ "$USE_LOCAL_SCRIPT" = "true" ]; then
+            # ローカルスクリプトを実行
+            echo "📁 Using local script..."
+            python3 .github/scripts/generate-header.py \
+              --tag "${{ steps.tag-info.outputs.tag }}" \
+              --theme auto \
+              --output "${HEADER_PATH}"
+          else
+            # リモートスクリプトを実行（デフォルト）
+            echo "🌐 Using remote script..."
+            curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py \
+              | python3 - --tag "${{ steps.tag-info.outputs.tag }}" --theme auto --output "${HEADER_PATH}"
+          fi
 
           echo "header-path=${HEADER_PATH}" >> "$GITHUB_OUTPUT"
           echo "✅ Header image generated: ${HEADER_PATH}"
