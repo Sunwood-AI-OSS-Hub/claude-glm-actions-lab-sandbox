@@ -17,7 +17,7 @@ permissions:
 
 env:
   FAL_KEY: ${{ secrets.FAL_KEY }}
-  HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}  # fal or svg
+  HEADER_MODE: ${{ vars.HEADER_MODE || 'svg' }}  # fal or svg
   SOURCE_LOCATION: ${{ vars.SOURCE_LOCATION || 'remote' }}  # ソースのロケーション: local または remote
   SOURCE_URL: ${{ vars.SOURCE_URL || 'https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/refs/heads/main/.github/scripts/generate-header.py' }}
   LOCAL_PATH: '.github/scripts/generate-header.py'
@@ -65,10 +65,10 @@ jobs:
 
           # HEADER_MODE に応じて拡張子とモードを設定
           # GitHub Variables で "SVG" など大文字になることがあるので正規化する
-          HEADER_MODE_NORM="$(printf '%s' "${HEADER_MODE:-}" | tr '[:upper:]' '[:lower:]' | sed -E 's/^ +//; s/ +$//')"
+          HEADER_MODE_NORM="$(printf '%s' "${HEADER_MODE:-}" | tr '[:upper:]' '[:lower:]' | tr -d '\r\n\t ' )"
           echo "HEADER_MODE(raw)='${HEADER_MODE:-}' normalized='${HEADER_MODE_NORM}'"
 
-          if [ "$HEADER_MODE_NORM" = "svg" ]; then
+          if [ "$HEADER_MODE_NORM" = "svg" ] || [ "$HEADER_MODE_NORM" = "vector" ]; then
             HEADER_EXT="svg"
             MODE_ARG="--format svg"
             echo "🎨 Using SVG vector mode..."
