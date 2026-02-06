@@ -186,6 +186,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
           HEADER_EXT: ${{ needs.generate-header.outputs.header-ext || 'png' }}
         run: |
+          # IMPORTANT:
+          # If GH_PAT_ONIZUKA is missing/empty, gh CLI will silently fall back to GITHUB_TOKEN.
+          # Events caused by GITHUB_TOKEN do not trigger other workflows, so @claude won't run.
+          if [ -z "${{ secrets.GH_PAT_ONIZUKA }}" ]; then
+            echo "ERROR: secrets.GH_PAT_ONIZUKA is not set (or empty)."
+            echo "Set GH_PAT_ONIZUKA to a PAT (classic) with repo scope (at least Issues) to allow downstream workflow triggers."
+            exit 1
+          fi
+
+          # Force gh CLI to use the PAT, not the ephemeral GITHUB_TOKEN.
+          unset GITHUB_TOKEN
+          export GH_TOKEN="${{ secrets.GH_PAT_ONIZUKA }}"
+
           TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
 
           # diffが大きい場合は制限
@@ -199,7 +212,7 @@ jobs:
 
           # Issue本文テンプレートを作成（一重引用符で囲んで変数展開を防ぐ）
           cat > /tmp/issue-template.md << 'TEMPLATEEOF'
-          @claude リリースノートを生成してください。
+          リリースノートを生成してください。
 
           ## リリース情報
           - タグ名: `__CURRENT_TAG__`
@@ -269,6 +282,7 @@ jobs:
 
           # Issueを作成（--body-file を使用して、シェルのメタ文字展開を回避）
           ISSUE_URL=$(gh issue create \
+            --repo "${GITHUB_REPOSITORY}" \
             --title "$TITLE" \
             --body-file /tmp/issue-template.md)
 
@@ -279,7 +293,9 @@ jobs:
 
           # @claude メンションを追加して responder をトリガー
           # github-actions[bot] によるコメントはトリガーされないため PAT を使用
-          export GH_TOKEN="${{ secrets.GH_PAT_ONIZUKA }}"
-          gh issue comment "$ISSUE_NUMBER" --body "@claude"
+          gh issue comment \
+            --repo "${GITHUB_REPOSITORY}" \
+            "$ISSUE_NUMBER" \
+            --body "@claude"
 
           echo "✅ @claude comment added to trigger responder"
