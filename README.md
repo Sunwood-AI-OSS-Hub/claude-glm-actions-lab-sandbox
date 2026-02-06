@@ -183,6 +183,20 @@ python3 .github/scripts/generate-header.py --mode svg --pattern waves --colormap
 | 環境変数 | 説明 | デフォルト値 |
 |----------|-------------|-------------|
 | `USE_LOCAL_SCRIPT` | ローカルスクリプトを使うか | `false`（リモート使用） |
+| `HEADER_MODE` | ヘッダー画像生成モード | `fal`（PNG画像） |
+
+#### ヘッダー画像モードの設定
+
+GitHubリポジトリの **Settings > Variables and secrets > Actions** で：
+
+1. **Variables > New repository variable**
+2. Name: `HEADER_MODE`
+3. Value: `fal` または `svg`
+
+##### 設定値の動作
+
+- `fal`（デフォルト）→ fal.aiでPNG画像を生成（FAL_KEYが必要）
+- `svg` → SVGベクター画像を生成（環境変数の設定は不要）
 
 #### ローカルスクリプトを使う場合
 

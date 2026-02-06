@@ -17,6 +17,7 @@ permissions:
 
 env:
   FAL_KEY: ${{ secrets.FAL_KEY }}
+  HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}  # fal or svg
 
 jobs:
   generate-header:
@@ -52,10 +53,23 @@ jobs:
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
           USE_LOCAL_SCRIPT: ${{ vars.USE_LOCAL_SCRIPT || 'false' }}
+          HEADER_MODE: ${{ vars.HEADER_MODE || 'fal' }}
         run: |
           HEADER_DIR="./assets/release-headers"
           mkdir -p "${HEADER_DIR}"
-          HEADER_PATH="${HEADER_DIR}/header-${{ steps.tag-info.outputs.tag }}.png"
+
+          # HEADER_MODE に応じて拡張子とモードを設定
+          if [ "$HEADER_MODE" = "svg" ]; then
+            HEADER_EXT="svg"
+            MODE_ARG="--mode svg"
+            echo "🎨 Using SVG vector mode..."
+          else
+            HEADER_EXT="png"
+            MODE_ARG=""
+            echo "🖼️ Using fal.ai PNG mode..."
+          fi
+
+          HEADER_PATH="${HEADER_DIR}/header-${{ steps.tag-info.outputs.tag }}.${HEADER_EXT}"
 
           # USE_LOCAL_SCRIPTでローカル/リモートを切り替えニャ！🐱
           if [ "$USE_LOCAL_SCRIPT" = "true" ]; then
@@ -64,15 +78,17 @@ jobs:
             python3 .github/scripts/generate-header.py \
               --tag "${{ steps.tag-info.outputs.tag }}" \
               --theme auto \
+              ${MODE_ARG} \
               --output "${HEADER_PATH}"
           else
             # リモートスクリプトを実行（デフォルト）
             echo "🌐 Using remote script..."
             curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py \
-              | python3 - --tag "${{ steps.tag-info.outputs.tag }}" --theme auto --output "${HEADER_PATH}"
+              | python3 - --tag "${{ steps.tag-info.outputs.tag }}" --theme auto ${MODE_ARG} --output "${HEADER_PATH}"
           fi
 
           echo "header-path=${HEADER_PATH}" >> "$GITHUB_OUTPUT"
+          echo "header-ext=${HEADER_EXT}" >> "$GITHUB_OUTPUT"
           echo "✅ Header image generated: ${HEADER_PATH}"
 
       - name: Upload header artifact
@@ -163,6 +179,7 @@ jobs:
       - name: Create issue for release notes
         env:
           GH_TOKEN: ${{ github.token }}
+          HEADER_EXT: ${{ needs.generate-header.outputs.header-ext || 'png' }}
         run: |
           TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
 
@@ -186,7 +203,7 @@ jobs:
 
           ## 🎨 ヘッダー画像
 
-          ![Header Image](https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.png)
+          ![Header Image](https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.__HEADER_EXT__)
 
           ## 変更されたファイル
 
@@ -214,7 +231,7 @@ jobs:
 
           - **冒頭にヘッダー画像を必ず埋め込んでください**:
             ```markdown
-            ![Header Image](https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.png)
+            ![Header Image](https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.__HEADER_EXT__)
             ```
           - ヘッダー画像の下に、美しい区切り線や装飾を加えてください
           - 琴音（コトネ）のキャラクターとして、文学的で丁寧な言葉遣いでリリースノートを書いてください
@@ -231,6 +248,7 @@ jobs:
           sed -i "s|__CURRENT_TAG__|${{ steps.prev-tag.outputs.current_tag }}|g" /tmp/issue-template.md
           sed -i "s|__CURRENT_VERSION__|${{ steps.prev-tag.outputs.current_version }}|g" /tmp/issue-template.md
           sed -i "s|__PREVIOUS_TAG__|${{ steps.prev-tag.outputs.previous_tag }}|g" /tmp/issue-template.md
+          sed -i "s|__HEADER_EXT__|${HEADER_EXT}|g" /tmp/issue-template.md
 
           # ファイル内容を埋め込み（r コマンドを使用）
           # これらのファイルには GitHub Actions 式のような文字列や `` ` `` などの特殊文字が含まれる可能性があるが、
