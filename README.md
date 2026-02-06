@@ -61,6 +61,53 @@ The workflow is triggered on:
 - Issue comments
 - Pull request review comments
 
+## ヘッダー画像生成
+
+### リモートから直接実行（推奨）
+
+```bash
+# curlで直接実行
+curl -s https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --tag v1.0.0
+
+# wgetの場合
+wget -qO- https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/main/.github/scripts/generate-header.py | python3 - --tag v1.0.0
+```
+
+### ローカルで実行
+
+```bash
+# リポジトリをクローンして実行
+git clone https://github.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox.git
+cd claude-glm-actions-lab-sandbox
+python3 .github/scripts/generate-header.py --tag v1.0.0
+```
+
+### オプション
+
+| オプション | 説明 | デフォルト値 |
+|-----------|-------------|-------------|
+| `--tag` | リリースタグ (例: v1.0.0, v2.1.3) | `v1.0.0` |
+| `--theme` | テーマ (feature/bugfix/major/patch/first/auto) | `auto` |
+| `--output` | 出力ファイルパス | `header.png` |
+| `--aspect-ratio` | アスペクト比 (16:9/4:3/1:1/21:9) | `16:9` |
+
+### テーマの自動検出
+
+`--theme auto`（デフォルト）の場合、タグからテーマを自動検出します：
+
+- **first**: v0.1.0, v1.0.0（初回リリース）
+- **major**: v2.0.0, v3.0.0（メジャーリリース）
+- **feature**: v1.1.0, v1.2.0（マイナーリリース）
+- **patch**: v1.1.1, v1.1.2（パッチリリース）
+
+### 必要な環境変数
+
+```bash
+export FAL_KEY='your-fal-ai-api-key'
+```
+
+---
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
