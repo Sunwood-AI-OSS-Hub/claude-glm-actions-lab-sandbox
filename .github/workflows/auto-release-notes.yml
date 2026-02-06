@@ -183,7 +183,7 @@ jobs:
 
       - name: Create issue for release notes
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT_ONIZUKA }}
           HEADER_EXT: ${{ needs.generate-header.outputs.header-ext || 'png' }}
         run: |
           TITLE="リリースノート生成: ${{ steps.prev-tag.outputs.current_tag }}"
