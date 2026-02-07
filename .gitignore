@@ -3,3 +3,9 @@
 scripts/sync-repo-tui/target/release/
 tmp/
 .github/scripts/__pycache__/
+
+# Local Claude agent settings (do not commit)
+.claude/agents/settings.json
+
+# Local Claude instructions (do not commit)
+CLAUDE.md
