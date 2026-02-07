@@ -43,6 +43,33 @@ jobs:
         with:
           ref: main
 
+      - name: Checkout agents repository
+        uses: actions/checkout@v4
+        with:
+          repository: Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox
+          ref: main
+          fetch-depth: 1
+          path: .tmp/agents-repo
+
+      - name: Install Claude agents into user directory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SRC_DIR=".tmp/agents-repo/.github/.claude/agents"
+          DEST_DIR="$HOME/.claude/agents"
+
+          if [[ ! -d "$SRC_DIR" ]]; then
+            echo "ERROR: Source agents directory not found: $SRC_DIR"
+            exit 1
+          fi
+
+          mkdir -p "$DEST_DIR"
+          # Copy agents from the checked out remote repository into the runner's user directory.
+          cp -a "$SRC_DIR/." "$DEST_DIR/"
+          echo "Installed agents:"
+          ls -la "$DEST_DIR"
+
       # ★ここで「この実行が使うブランチ名」を決め打ちする
       - name: Compute branch name
         id: branch
