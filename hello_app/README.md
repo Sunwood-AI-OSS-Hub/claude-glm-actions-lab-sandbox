@@ -76,8 +76,10 @@ python -m unittest tests.test_hello_app
 
 `tests/test_hello_app.py` includes the following test cases:
 
-- `test_hello_app_outputs_hello` - Verifies that "Hello" is output
-- `test_hello_app_no_stderr` - Verifies that nothing is output to stderr
+- `test_hello_app_normal_execution` - Verifies that "Hello" is output correctly,
+  the exit code is 0, and no stderr output is produced
+- `test_hello_app_handles_broken_stdout` - Verifies that the application
+  handles stdout errors gracefully and returns a non-zero exit code
 
 ## File Structure
 

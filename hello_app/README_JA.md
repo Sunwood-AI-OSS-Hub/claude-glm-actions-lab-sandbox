@@ -76,8 +76,10 @@ python -m unittest tests.test_hello_app
 
 `tests/test_hello_app.py` には以下のテストケースが含まれています：
 
-- `test_hello_app_outputs_hello` - 「Hello」が出力されることを確認
-- `test_hello_app_no_stderr` - 標準エラー出力に何も出力されないことを確認
+- `test_hello_app_normal_execution` - 「Hello」が正しく出力され、終了コードが0で、
+  標準エラー出力に何も出力されないことを確認
+- `test_hello_app_handles_broken_stdout` - 標準出力がエラーになった場合に、
+  アプリケーションが適切に処理し、非ゼロの終了コードを返すことを確認
 
 ## ファイル構造
 
