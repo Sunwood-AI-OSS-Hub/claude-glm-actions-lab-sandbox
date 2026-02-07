@@ -251,11 +251,16 @@ jobs:
 
           ## 📝 リリースノート作成の指示
 
-          - **冒頭にヘッダー画像を必ず埋め込んでください**:
-            ```markdown
-            ![Header Image](https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.__HEADER_EXT__)
+          - **冒頭にヘッダー画像とタイトルを必ず入れてください（どちらも中央揃え）**:
+            ```html
+            <div align="center">
+              <img src="https://raw.githubusercontent.com/Sunwood-AI-OSS-Hub/claude-glm-actions-lab-sandbox/header-__CURRENT_TAG__/assets/release-headers/header-__CURRENT_TAG__.__HEADER_EXT__" alt="Header Image" />
+            </div>
+            <div align="center">
+              <h2>🎉 __CURRENT_TAG__ リリースノート</h2>
+            </div>
             ```
-          - ヘッダー画像の下に、美しい区切り線や装飾を加えてください
+          - **ヘッダー画像とタイトルの間に区切り線（`---` / `***`）は不要です**
           - 琴音（コトネ）のキャラクターとして、文学的で丁寧な言葉遣いでリリースノートを書いてください
 
           生成後、GitHub Release を作成してください。
